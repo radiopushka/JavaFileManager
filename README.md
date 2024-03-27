@@ -15,4 +15,4 @@ Requires: JDK 11 or higher, works with jdk 21,17,22, etc
 
 screenshot:
 
-[Screenshot_2023-10-26_14-05-45.png]
+[./Screenshot_2023-10-26_14-05-45.png]
