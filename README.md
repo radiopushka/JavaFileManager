@@ -15,4 +15,5 @@ Requires: JDK 11 or higher, works with jdk 21,17,22, etc
 
 screenshot:
 
-[](./Screenshot_2023-10-26_14-05-45.png)
+
+![Screenshot_2024-03-27_00-12-58](https://github.com/radiopushka/JavaFileManager/assets/48099825/8f95e953-4e35-4fed-9ffb-9de16fdcaf78)
