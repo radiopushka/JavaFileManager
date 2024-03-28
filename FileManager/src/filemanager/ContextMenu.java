@@ -26,7 +26,7 @@ public class ContextMenu {
     public ContextMenu(JFrame input){
         parent=input;
     }
-    public void optionsDialogue(Vector<File> selection,File location){
+    public void optionsDialogue(Vector<File> selection,File location,CustomIcons ics){
         if(selection.size()<1){
             return;
         }
@@ -37,14 +37,20 @@ public class ContextMenu {
             File f=sel.nextElement();
             tooltip=tooltip+"|"+f.getName();
         }
-        options.setLayout(new GridLayout(8,1));
-        JButton jb=new JButton();
+        options.setLayout(new GridLayout(10,1));
+        JTextField jb=new JTextField();
+        jb.setText(selection.lastElement().getAbsolutePath());
         jb.setToolTipText(tooltip);
         options.add(jb);
         JButton open=new JButton("open");
+        JButton iconss=new JButton("set default icon for file type");
+        JButton iconsd=new JButton("remove default icon for file type");
+
         if(selection.size()<2){
             if(selection.lastElement().isFile())
                 options.add(open);
+               
+            
         }
         open.addActionListener((ActionEvent e) -> {
             OpenPreferences.LaunchDialogue(selection.firstElement(),parent,null);
@@ -85,6 +91,13 @@ public class ContextMenu {
         JButton rename=new JButton("rename");
         if(selection.size()<2){
             options.add(rename);
+            if(selection.lastElement().isFile()&&selection.lastElement().getName().substring(1).contains(".")){
+                if(ics.getForExtension(selection.lastElement().getName())==null)
+                     options.add(iconss);
+                else
+                     options.add(iconsd);
+            }
+
         }
         rename.addActionListener((ActionEvent e) -> {
             SwingUtilities.getWindowAncestor(rename).setVisible(false);
@@ -100,6 +113,20 @@ public class ContextMenu {
                     }
                 }   
             }
+        });
+        iconss.addActionListener((ActionEvent e) -> {
+            String path=JOptionPane.showInputDialog(parent, "path to the icon");
+            if(path==null)
+                return;
+            ics.putForExtension(selection.lastElement().getName(),new File(path));
+            SwingUtilities.getWindowAncestor(iconss).setVisible(false);
+
+        });
+        iconsd.addActionListener((ActionEvent e) -> {
+            
+            ics.removeForExtension(selection.lastElement().getName());
+            SwingUtilities.getWindowAncestor(iconsd).setVisible(false);
+
         });
         JOptionPane.showMessageDialog(parent,options);
     }

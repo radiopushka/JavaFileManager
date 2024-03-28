@@ -78,7 +78,10 @@ public class CommandManager {
     }
     public void putString(String key,String data){
         String truekey=key.replace("\\", "");
-        prefs.put(truekey, data);
+        if(data==null)
+            prefs.remove(truekey);
+        else
+            prefs.put(truekey, data);
     }
     public String getString(String key,String def){
         String truekey=key.replace("\\", "");
@@ -91,5 +94,6 @@ public class CommandManager {
             Logger.getLogger(CommandManager.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
     
 }

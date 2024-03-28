@@ -32,7 +32,9 @@ public class DirectoryView {
     private final JPanel mainView;
     public String currentdir=null;
     private final int icon_size=64;
+    private final CustomIcons cmicons;
     private final int font_size=12;
+    private final String[] imageformats;
     private final String font_size_string;
     private final JFrame holder;
     private final Vector<File> selection=new Vector<>();
@@ -41,6 +43,8 @@ public class DirectoryView {
     private DirChangeListener drls=null;
     private boolean wassearch=false;
     public DirectoryView(JPanel jscp,JFrame window){
+        imageformats=ImageIO.getReaderFileSuffixes();
+        cmicons=new CustomIcons();
         holder=window;
         mainView=jscp;
         font_size_string=Integer.toString(font_size);
@@ -161,27 +165,32 @@ public class DirectoryView {
         int i;
         for(i=0;i<elements;i++){
           if(search==null||dirlist[i].getName().toLowerCase().contains(search.toLowerCase())){
-            final int icopy=i;
+            final File fcopy=dirlist[i];
             JButton click=new JButton();
             
-            setMultiSelectListener(click,dirlist[i]);
-            final boolean isdir=dirlist[i].isDirectory();
-            click.setIcon(new ImageIcon(generateIconForFile(dirlist[i],isdir,click)));
-            click.setToolTipText(dirlist[icopy].getName()+" - "+SpacetoInt(dirlist[icopy].length()));
+    
+            final boolean isdir=fcopy.isDirectory();
+            click.setIcon(new ImageIcon(generateIconForFile(fcopy,isdir)));
+            click.setToolTipText(fcopy.getName()+" - "+SpacetoInt(fcopy.length()));
             click.addActionListener((ActionEvent e) -> {
+                MultiSelectListener(e,click,fcopy);
                  if((e.getModifiers()|ActionEvent.SHIFT_MASK)==e.getModifiers())
                      return;
                 if(isdir){
-                    drawDirectory(dirlist[icopy].getAbsolutePath(),true,null);
+                    drawDirectory(fcopy.getAbsolutePath(),true,null);
                     if(drls!=null){
-                        drls.dirChanged(dirlist[icopy].getAbsolutePath(),path);
+                        drls.dirChanged(fcopy.getAbsolutePath(),path);
                     }
                 }else{
-                    String cmd=OpenPreferences.getDefaultForExtension(dirlist[icopy].getName());
+                    String cmd=OpenPreferences.getDefaultForExtension(fcopy.getName());
                     if(cmd!=null)
-                        OpenPreferences.runCommand(cmd, dirlist[icopy].getAbsolutePath());
+                        OpenPreferences.runCommand(cmd, fcopy.getAbsolutePath());
                 }
+                
             });
+            boolean bd[]=new boolean[2];
+            bd[1]=false;
+            bd[0]=false;
             click.addMouseListener(new MouseListener(){
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -194,17 +203,22 @@ public class DirectoryView {
                 @Override
                 public void mouseReleased(MouseEvent e) {
                     if(e.getButton()==MouseEvent.BUTTON3){
-                        if(!selection.contains(dirlist[icopy]))
-                             selection.add(dirlist[icopy]);
+                        if(!selection.contains(fcopy))
+                             selection.add(fcopy);
                         ContextMenu cm=new ContextMenu(holder);
-                        cm.optionsDialogue(selection,new File(currentdir)
-                        );
+                        cm.optionsDialogue(selection,new File(currentdir),cmicons);
                         drawDirectory(path,true,null);
                     }
                 }
 
                 @Override
                 public void mouseEntered(MouseEvent e) {
+                    if(bd[1])
+                        return;
+                    bd[1]=true;
+                    if(isFileImage(fcopy.getName().toLowerCase())){
+                        setButtonImageResp(click, fcopy,bd, e);
+                    }
                 }
 
                 @Override
@@ -227,8 +241,8 @@ public class DirectoryView {
      
         
     }
-    private void setMultiSelectListener(JButton in,File file){
-        in.addActionListener((ActionEvent e) -> {
+    private void MultiSelectListener(ActionEvent e,JButton in,File file){
+       
             if((e.getModifiers()|ActionEvent.SHIFT_MASK)!=e.getModifiers())
                 return;
             
@@ -247,27 +261,12 @@ public class DirectoryView {
                     in.setText("");
                 }
             }
-        });
+       
       
     }
-    private void setButtonImageResp(JButton in, File image){
-        boolean bd[]=new boolean[1];
-        bd[0]=false;
-        in.addMouseListener(new MouseListener() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
+    private void setButtonImageResp(JButton in, File image,boolean bd[],MouseEvent e){
+        //boolean bd[]=new boolean[1];
+       
                 if(!bd[0]){
                  bd[0]=true;
                  new Thread(){
@@ -283,6 +282,8 @@ public class DirectoryView {
                         grph.setColor(Color.BLACK);
                         grph.drawString(image.getName(), 0, icon_size);
                         grph.drawImage(impose, 0, 0,icon_size,icon_size-font_size, null);
+                        if(!in.isValid())
+                            return;
                         in.setIcon(new ImageIcon(drim));
                         in.validate();
                         holder.repaint();
@@ -294,6 +295,8 @@ public class DirectoryView {
                             grph.setColor(Color.BLACK);
                             grph.drawString(image.getName(), 0, icon_size);
                             grph.drawImage(impose, 0, 0,icon_size,icon_size-font_size, null);
+                            if(!in.isValid())
+                                return;
                             in.setIcon(new ImageIcon(drim));
                             in.validate();
                         } catch (IOException ex) {
@@ -304,12 +307,7 @@ public class DirectoryView {
                     }
                    }}.start();
                 }
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-            }
-        });
+          
     }
     private String SpacetoInt(long space){
         long KB=space/1000;
@@ -327,19 +325,19 @@ public class DirectoryView {
     public void setDirChangeListener(DirChangeListener dls){
         drls=dls;
     }
-    private boolean isFileImage(File input){
-        String lists[]=ImageIO.getReaderFileSuffixes();
-        String inlower=input.getName().toLowerCase();
-        for(String suff:lists){
+    private boolean isFileImage(String inlower){
+       
+        
+        for(String suff:imageformats){
             if(inlower.endsWith("."+suff)){
                 return true;
             }
         }
         return false;
     }
-    private boolean isFileMusic(File input){
+    private boolean isFileMusic(String inlower){
         String audioformats[]={".mp3",".wav",".ogg",".wma",".aac",".flac",".aiff"};
-        String inlower=input.getName().toLowerCase();
+       
         for(String name:audioformats){
             if(inlower.endsWith(name)){
                     return true;
@@ -347,9 +345,9 @@ public class DirectoryView {
         }
         return false;
     }
-    private boolean isVideo(File input){
+    private boolean isVideo(String inlower){
         String audioformats[]={".mp4",".webm",".mkv",".mov",".avi",".flv",".wmv"};
-        String inlower=input.getName().toLowerCase();
+
         for(String name:audioformats){
             if(inlower.endsWith(name)){
                     return true;
@@ -359,7 +357,7 @@ public class DirectoryView {
     }
     private BufferedImage drim=null;
     private Graphics2D grph=null;
-    private BufferedImage generateIconForFile(File in,boolean isdir,JButton btn){
+    private BufferedImage generateIconForFile(File in,boolean isdir){
         int extrabtm=font_size;
         if(drim==null){
             drim=new BufferedImage(icon_size,icon_size+extrabtm,BufferedImage.TYPE_4BYTE_ABGR);
@@ -377,6 +375,8 @@ public class DirectoryView {
         String name=in.getName();
         String suffix=null;
         grph.drawString(name, 0, icon_size);
+        String inlower=in.getName().toLowerCase();
+        BufferedImage tmp;
         try{
             BufferedImage impose;
             if(isdir){
@@ -385,28 +385,38 @@ public class DirectoryView {
                      imagecache[0]=impose;
                  }else
                      impose=imagecache[0];
-            }else if(isFileImage(in)){
-                setButtonImageResp(btn, in);
+            }else if(!inlower.contains(".")){
+                 if(imagecache[3]==null){
+                  impose=ImageIO.read(FileManager.class.getResourceAsStream("file.png"));
+                  imagecache[3]=impose;
+                }else{
+                    impose=imagecache[3];
+                }
+            
+            }else if(isFileImage(inlower)){
+            
                 if(imagecache[1]==null){
                     impose=ImageIO.read(FileManager.class.getResourceAsStream("image.png"));
                     imagecache[1]=impose;
                 }else{
                     impose=imagecache[1];
                 }
-            }else if(isFileMusic(in)){
+            }else if(isFileMusic(inlower)){
                 if(imagecache[2]==null){
                      impose=ImageIO.read(FileManager.class.getResourceAsStream("audio.png"));
                      imagecache[2]=impose;
                 }else{
                     impose=imagecache[2];
                 }
-            }else if(isVideo(in)){
+            }else if(isVideo(inlower)){
                 if(imagecache[4]==null){
                      impose=ImageIO.read(FileManager.class.getResourceAsStream("video.png"));
                      imagecache[4]=impose;
                 }else{
                     impose=imagecache[4];
                 }
+            }else if((tmp=cmicons.getForExtension(inlower))!=null){
+                impose=tmp;
             }else {
                 if(imagecache[3]==null){
                   impose=ImageIO.read(FileManager.class.getResourceAsStream("file.png"));
@@ -432,5 +442,7 @@ public class DirectoryView {
         ret.setData(drim.getData());
         return ret;
     }
-    
+    public void clearCache(){
+        cmicons.clearCache();
+    }
 }

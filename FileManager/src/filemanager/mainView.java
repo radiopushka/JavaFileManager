@@ -50,7 +50,7 @@ public class mainView extends javax.swing.JFrame {
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
         Contain = new javax.swing.JScrollPane();
-        FContain = new javax.swing.JPanel();
+        FContains = new javax.swing.JPanel();
         jButton4 = new javax.swing.JButton();
         jButton6 = new javax.swing.JButton();
         jButton7 = new javax.swing.JButton();
@@ -109,35 +109,34 @@ public class mainView extends javax.swing.JFrame {
         });
 
         Contain.setAutoscrolls(true);
+        Contain.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                ContainPropertyChange(evt);
+            }
+        });
         Contain.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 ContainKeyPressed(evt);
             }
         });
-
-        FContain.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            public void mouseDragged(java.awt.event.MouseEvent evt) {
-                FContainMouseDragged(evt);
-            }
-        });
-        FContain.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                FContainKeyPressed(evt);
+        Contain.addVetoableChangeListener(new java.beans.VetoableChangeListener() {
+            public void vetoableChange(java.beans.PropertyChangeEvent evt)throws java.beans.PropertyVetoException {
+                ContainVetoableChange(evt);
             }
         });
 
-        javax.swing.GroupLayout FContainLayout = new javax.swing.GroupLayout(FContain);
-        FContain.setLayout(FContainLayout);
-        FContainLayout.setHorizontalGroup(
-            FContainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout FContainsLayout = new javax.swing.GroupLayout(FContains);
+        FContains.setLayout(FContainsLayout);
+        FContainsLayout.setHorizontalGroup(
+            FContainsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 727, Short.MAX_VALUE)
         );
-        FContainLayout.setVerticalGroup(
-            FContainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 444, Short.MAX_VALUE)
+        FContainsLayout.setVerticalGroup(
+            FContainsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 453, Short.MAX_VALUE)
         );
 
-        Contain.setViewportView(FContain);
+        Contain.setViewportView(FContains);
 
         jButton4.setText("term");
         jButton4.addActionListener(new java.awt.event.ActionListener() {
@@ -214,7 +213,7 @@ public class mainView extends javax.swing.JFrame {
                         .addComponent(jButton8, javax.swing.GroupLayout.Alignment.TRAILING))
                     .addComponent(jButton9))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(Contain, javax.swing.GroupLayout.DEFAULT_SIZE, 455, Short.MAX_VALUE))
+                .addComponent(Contain))
         );
 
         jSplitPane1.setRightComponent(jPanel1);
@@ -311,11 +310,6 @@ public class mainView extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jTextField1KeyPressed
 
-    private void FContainKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_FContainKeyPressed
-        // TODO add your handling code here:
-        
-    }//GEN-LAST:event_FContainKeyPressed
-
     private void ContainKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_ContainKeyPressed
         // TODO add your handling code here:
        
@@ -334,11 +328,6 @@ public class mainView extends javax.swing.JFrame {
     private void jPanel1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jPanel1KeyPressed
         // TODO add your handling code here:
     }//GEN-LAST:event_jPanel1KeyPressed
-
-    private void FContainMouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_FContainMouseDragged
-        // TODO add your handling code here:
-       
-    }//GEN-LAST:event_FContainMouseDragged
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
         // TODO add your handling code here:
@@ -402,6 +391,7 @@ public class mainView extends javax.swing.JFrame {
                 CommandManager cmm=new CommandManager();
                 cmm.clearVector("SavedDirs");
                 cmm.putVectorS("SavedDirs", pathprefs);
+                
                 jList1.setListData(getListFormat(pathprefs));
             }
         }
@@ -414,6 +404,9 @@ public class mainView extends javax.swing.JFrame {
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
         // TODO add your handling code here:
+        CommandManager cmm=new CommandManager();
+        Vector<String> saveddirs=cmm.getVectorS("SavedDirs");
+        jList1.setListData(getListFormat(saveddirs));
         drview.drawDirectory(drview.currentdir, true);
     }//GEN-LAST:event_jButton7ActionPerformed
 
@@ -436,6 +429,16 @@ public class mainView extends javax.swing.JFrame {
         nf.mkdir();
         drview.drawDirectory(drview.currentdir, true);
     }//GEN-LAST:event_jButton9ActionPerformed
+
+    private void ContainVetoableChange(java.beans.PropertyChangeEvent evt)throws java.beans.PropertyVetoException {//GEN-FIRST:event_ContainVetoableChange
+        // TODO add your handling code here:
+       // System.out.println(evt.getPropertyName());
+    }//GEN-LAST:event_ContainVetoableChange
+
+    private void ContainPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_ContainPropertyChange
+        // TODO add your handling code here:
+       // System.out.println(evt.getPropertyName());
+    }//GEN-LAST:event_ContainPropertyChange
 
     /**
      * @param args the command line arguments
@@ -491,7 +494,7 @@ public class mainView extends javax.swing.JFrame {
             Vector<String> saveddirs=cmm.getVectorS("SavedDirs");
             mv.jList1.setListData(getListFormat(saveddirs));
             dh=new DHistory();
-            drview=new DirectoryView(mv.FContain,mv);
+            drview=new DirectoryView(mv.FContains,mv);
             String startpath=System.getProperty("user.home");
             drview.drawDirectory(startpath,false);
             jTextField1.setText(startpath);
@@ -529,7 +532,7 @@ public class mainView extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     public javax.swing.JScrollPane Contain;
-    public javax.swing.JPanel FContain;
+    public javax.swing.JPanel FContains;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
