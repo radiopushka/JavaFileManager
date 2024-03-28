@@ -407,6 +407,7 @@ public class mainView extends javax.swing.JFrame {
         CommandManager cmm=new CommandManager();
         Vector<String> saveddirs=cmm.getVectorS("SavedDirs");
         jList1.setListData(getListFormat(saveddirs));
+        drview.clearCache();
         drview.drawDirectory(drview.currentdir, true);
     }//GEN-LAST:event_jButton7ActionPerformed
 

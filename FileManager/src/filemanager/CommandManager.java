@@ -31,6 +31,7 @@ public class CommandManager {
         }
         try {
             prefs.flush();
+           
         } catch (BackingStoreException ex) {
             Logger.getLogger(CommandManager.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -59,6 +60,11 @@ public class CommandManager {
     public Vector<File> getVector(String key){
         int i=0;
         String pdata;
+        try {
+            prefs.sync();
+        } catch (BackingStoreException ex) {
+            Logger.getLogger(CommandManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
         Vector<File> ret=new Vector<>();
         while((pdata=prefs.get(key+"\\"+Integer.toString(i), null))!=null){
             ret.add(new File(pdata));
@@ -69,6 +75,12 @@ public class CommandManager {
     public Vector<String> getVectorS(String key){
         int i=0;
         String pdata;
+       
+        try {
+            prefs.sync();
+        } catch (BackingStoreException ex) {
+            Logger.getLogger(CommandManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
         Vector<String> ret=new Vector<>();
         while((pdata=prefs.get(key+"\\"+Integer.toString(i), null))!=null){
             ret.add(pdata);
