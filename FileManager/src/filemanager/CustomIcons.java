@@ -29,11 +29,13 @@ public class CustomIcons {
     public BufferedImage getForExtension(String name,int w,int h){
         
         String suffix=name.substring(name.lastIndexOf(".")).toLowerCase();
+        BufferedImage ret;
+        if((ret=hsht.get(suffix))!=null){
+            return ret;
+        }
         if(nullables.contains(suffix))
             return null;
-        if(hsht.contains(suffix)){
-            return hsht.get(suffix);
-        }
+        
         String path=cmd.getString("ICON"+suffix, null);
         if(path==null){
             nullables.add(suffix);

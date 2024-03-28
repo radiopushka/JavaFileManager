@@ -17,7 +17,6 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Enumeration;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,9 +42,11 @@ public class DirectoryView {
     private final int font_size=12;
     private final String[] imageformats;
     private final String font_size_string;
-    private final Vector<Thread> threads;
+    private final Vector<JButton> thread_btn;
+    private final Vector<File> thread_file;
     private final JFrame holder;
     private final Vector<File> selection=new Vector<>();
+    private BufferedImage load_icon;
     private final BufferedImage imagecache[]=new BufferedImage[5];
     private File prev[]=null;
     private int maxfiles=400;
@@ -57,8 +58,15 @@ public class DirectoryView {
         maxfiles=(dsp.getWidth()/icon_size)*(dsp.getHeight()/icon_size);
         cmicons=new CustomIcons();
         holder=window;
+        try {
+            load_icon=ImageIO.read(FileManager.class.getResourceAsStream("load.png"));
+        } catch (IOException ex) {
+            load_icon=new BufferedImage(icon_size,icon_size,BufferedImage.TYPE_4BYTE_ABGR);
+            Logger.getLogger(DirectoryView.class.getName()).log(Level.SEVERE, null, ex);
+        }
         mainView=jscp;
-        threads=new Vector<>();
+        thread_btn=new Vector<>();
+        thread_file=new Vector<>();
         font_size_string=Integer.toString(font_size);
         int i;
         for(i=0;i<5;i++){
@@ -203,7 +211,13 @@ public class DirectoryView {
             
     
             final boolean isdir=fcopy.isDirectory();
-            click.setIcon(new ImageIcon(generateIconForFile(fcopy,isdir)));
+            
+            if(isFileImage(fcopy.getName().toLowerCase())){
+                   setButtonImageResp(click, fcopy);
+             }else{
+                   click.setIcon(new ImageIcon(generateIconForFile(fcopy,isdir)));
+
+             }
             click.setToolTipText(fcopy.getName()+" - "+SpacetoInt(fcopy.length()));
             click.addActionListener((ActionEvent e) -> {
                 MultiSelectListener(e,click,fcopy);
@@ -221,9 +235,8 @@ public class DirectoryView {
                 }
                 
             });
-            boolean bd[]=new boolean[2];
-            bd[1]=false;
-            bd[0]=false;
+            
+           
             if(i==startindex+increment-1)
               click.addAncestorListener(new AncestorListener() {
                 @Override
@@ -266,12 +279,12 @@ public class DirectoryView {
 
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    if(bd[1])
+                   /* if(bd[1])
                         return;
                     bd[1]=true;
                     if(isFileImage(fcopy.getName().toLowerCase())){
-                        setButtonImageResp(click, fcopy,bd, e);
-                    }
+                        setButtonImageResp(click, fcopy,bd);
+                    }*/
                 }
 
                 @Override
@@ -317,70 +330,66 @@ public class DirectoryView {
       
     }
     private void killImageThreads(){
-        Enumeration<Thread> thrds=threads.elements();
-        while(thrds.hasMoreElements()){
-            Thread th=thrds.nextElement();
-            if(th.isAlive()){
-                th.interrupt();
-            }
-        }
-        threads.clear();
+        if(dispatched==null)
+            return;
+       if(dispatched.isAlive())
+           dispatched.interrupt();
+       thread_btn.clear();
+       thread_file.clear();
     }
-    private void cleanThreadArray(){
-         Enumeration<Thread> thrds=threads.elements();
-        while(thrds.hasMoreElements()){
-            Thread th=thrds.nextElement();
-            if(!th.isAlive()){
-                threads.remove(th);
-            }
-        }
-    }
-    private void setButtonImageResp(JButton in, File image,boolean bd[],MouseEvent e){
+   
+    private Thread dispatched=null;
+    private void setButtonImageResp(JButton in, File imagein){
         //boolean bd[]=new boolean[1];
        
-                if(!bd[0]){
-                 bd[0]=true;
-                 Thread th=new Thread(){
+              
+                 //draw load icon
+                         BufferedImage impose=load_icon;
+                         BufferedImage drim2=new BufferedImage(icon_size,icon_size+font_size,BufferedImage.TYPE_4BYTE_ABGR);
+                         Graphics2D grph2=drim2.createGraphics();
+                         grph2.setFont(Font.decode("dialogue-"+font_size_string));
+                         grph2.setColor(Color.BLACK);
+                         grph2.drawString(imagein.getName(), 0, icon_size);
+                         grph2.drawImage(impose, 0, 0,icon_size,icon_size-font_size, null);
+                        in.setIcon(new ImageIcon(drim2));
+                        in.validate();
+                        holder.repaint();
+                 thread_btn.add(in);
+                 thread_file.add(imagein);
+                 if(dispatched!=null){
+                     if(dispatched.isAlive())
+                         return;
+                 }
+                 dispatched=new Thread(){
                    @Override
                    public void run(){
                    
-                    try {
-                        
-                        BufferedImage impose=ImageIO.read(FileManager.class.getResourceAsStream("load.png"));
-                        BufferedImage drim=new BufferedImage(icon_size,icon_size+font_size,BufferedImage.TYPE_4BYTE_ABGR);
-                        Graphics2D grph=drim.createGraphics();
-                        grph.setFont(Font.decode("dialogue-"+font_size_string));
-                        grph.setColor(Color.BLACK);
-                        grph.drawString(image.getName(), 0, icon_size);
-                        grph.drawImage(impose, 0, 0,icon_size,icon_size-font_size, null);
-                        if(!in.isValid())
-                            return;
-                        in.setIcon(new ImageIcon(drim));
-                        in.validate();
-                        holder.repaint();
+                    
+                    while(!thread_file.isEmpty()){
+                        JButton top=thread_btn.lastElement();
+                        File image=thread_file.lastElement();
+                        thread_btn.remove(top);
+                        thread_file.remove(image);
                         try {
-                            impose=ImageIO.read(image);
-                            drim=new BufferedImage(icon_size,icon_size+font_size,BufferedImage.TYPE_4BYTE_ABGR);
-                            grph=drim.createGraphics();
+                            BufferedImage impose=ImageIO.read(image);
+                            BufferedImage drim=new BufferedImage(icon_size,icon_size+font_size,BufferedImage.TYPE_4BYTE_ABGR);
+                            Graphics2D grph=drim.createGraphics();
                             grph.setFont(Font.decode("dialogue-"+font_size_string));
                             grph.setColor(Color.BLACK);
                             grph.drawString(image.getName(), 0, icon_size);
                             grph.drawImage(impose, 0, 0,icon_size,icon_size-font_size, null);
-                            if(!in.isValid())
-                                return;
-                            in.setIcon(new ImageIcon(drim));
-                            in.validate();
+                            top.setIcon(new ImageIcon(drim));
+                            top.validate();
                         } catch (IOException ex) {
                            // Logger.getLogger(DirectoryView.class.getName()).log(Level.SEVERE, null, ex);
+                           top.setIcon(new ImageIcon(generateIconForFile(image,false)));
                         }
-                    } catch (IOException ex) {
-                        Logger.getLogger(DirectoryView.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                    
                    }};
-                 cleanThreadArray();
-                 threads.add(th);
-                 th.start();
-                }
+                
+                 dispatched.start();
+                
           
     }
     private String SpacetoInt(long space){
