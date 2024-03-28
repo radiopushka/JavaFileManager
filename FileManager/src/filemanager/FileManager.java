@@ -4,7 +4,6 @@
  */
 package filemanager;
 
-import javax.imageio.ImageIO;
 
 /**
  *

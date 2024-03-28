@@ -28,7 +28,7 @@ public class CustomIcons {
     }
     public BufferedImage getForExtension(String name,int w,int h){
         
-        String suffix=name.substring(name.lastIndexOf("."));
+        String suffix=name.substring(name.lastIndexOf(".")).toLowerCase();
         if(nullables.contains(suffix))
             return null;
         if(hsht.contains(suffix)){
@@ -55,7 +55,7 @@ public class CustomIcons {
         return null;
     }
     public void putForExtension(String name,File image){
-        String suffix=name.substring(name.lastIndexOf("."));
+        String suffix=name.substring(name.lastIndexOf(".")).toLowerCase();
         BufferedImage icon;
         try{
         icon=ImageIO.read(image);
@@ -70,7 +70,7 @@ public class CustomIcons {
         
     }
     public void removeForExtension(String name){
-        String suffix=name.substring(name.lastIndexOf("."));
+        String suffix=name.substring(name.lastIndexOf(".")).toLowerCase();
         if(hsht.contains(suffix)){
             hsht.remove(suffix);
             nullables.add(suffix);

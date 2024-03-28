@@ -6,8 +6,10 @@ package filemanager;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.DisplayMode;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
@@ -25,6 +27,9 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 
 /**
  *
@@ -43,10 +48,13 @@ public class DirectoryView {
     private final Vector<File> selection=new Vector<>();
     private final BufferedImage imagecache[]=new BufferedImage[5];
     private File prev[]=null;
+    private int maxfiles=400;
     private DirChangeListener drls=null;
     private boolean wassearch=false;
     public DirectoryView(JPanel jscp,JFrame window){
         imageformats=ImageIO.getReaderFileSuffixes();
+        DisplayMode dsp=GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode();
+        maxfiles=(dsp.getWidth()/icon_size)*(dsp.getHeight()/icon_size);
         cmicons=new CustomIcons();
         holder=window;
         mainView=jscp;
@@ -137,8 +145,8 @@ public class DirectoryView {
             
         }
         if(!wassearch)
-         if(search==null&&prev!=null&&compare(prev,dirlist)){
-             int elements=dirlist.length+1;
+         if(current_layout_size>=0&&search==null&&prev!=null&&compare(prev,dirlist)){
+             int elements=current_layout_size+1;
              int rows=elements/cols;
              Component cmp[]=mainView.getComponents();
              boolean first=false;
@@ -162,15 +170,33 @@ public class DirectoryView {
         cmicons.clearNullCache();
         prev=dirlist;
         mainView.removeAll();
-        int elements=dirlist.length+1;
-        int rows=elements/cols;
-        while(rows*cols<elements){
+        
+        mainView.add(new JLabel("files: "+Integer.toString(dirlist.length)));
+        
+        int max=maxfiles;
+        if(search!=null){
+            max=dirlist.length;
+        }
+       drawButtons(dirlist,1,0,dirlist.length,max,repaint,path,search);
+        
+    }
+    private int current_layout_size=-1;
+    private void drawButtons(File dirlist[],int offset,int startindex,int maxindex,int increment,boolean repaint,String path,String search){
+         int i;
+         int width=holder.getWidth()>>1;
+        int cols=(width/(icon_size+5));
+        int elements=startindex+increment;
+        if(elements>maxindex){
+            elements=maxindex;
+        }
+        
+        current_layout_size=elements+offset;
+        int rows=(offset+elements)/cols;
+        while(rows*cols<(elements+offset)){
             rows++;
         }
         mainView.setLayout(new GridLayout(rows,cols));
-        mainView.add(new JLabel("files: "+Integer.toString(dirlist.length)));
-        int i;
-        for(i=0;i<elements-1;i++){
+        for(i=startindex;i<elements;i++){
           if(search==null||dirlist[i].getName().toLowerCase().contains(search.toLowerCase())){
             final File fcopy=dirlist[i];
             JButton click=new JButton();
@@ -198,6 +224,26 @@ public class DirectoryView {
             boolean bd[]=new boolean[2];
             bd[1]=false;
             bd[0]=false;
+            if(i==startindex+increment-1)
+              click.addAncestorListener(new AncestorListener() {
+                @Override
+                public void ancestorAdded(AncestorEvent event) {
+                }
+
+                @Override
+                public void ancestorRemoved(AncestorEvent event) {
+                }
+
+                @Override
+                public void ancestorMoved(AncestorEvent event) {
+                    JScrollPane scroll=(JScrollPane)mainView.getParent().getParent();//get our scroll bar
+                    int max=(scroll.getVerticalScrollBar().getMaximum()>>1)-10;
+                    if(max>scroll.getVerticalScrollBar().getValue())
+                        return;
+                    click.removeAncestorListener(this);
+                    drawButtons(dirlist,offset,startindex+increment,maxindex,increment,repaint,path,search);
+                }
+            });
             click.addMouseListener(new MouseListener(){
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -246,7 +292,6 @@ public class DirectoryView {
         }
 
      
-        
     }
     private void MultiSelectListener(ActionEvent e,JButton in,File file){
        
