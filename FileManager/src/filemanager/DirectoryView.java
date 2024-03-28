@@ -176,6 +176,7 @@ public class DirectoryView {
         wassearch = search!=null;
         killImageThreads();
         cmicons.clearNullCache();
+        System.gc();
         prev=dirlist;
         mainView.removeAll();
         
