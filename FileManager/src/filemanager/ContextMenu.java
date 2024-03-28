@@ -92,7 +92,7 @@ public class ContextMenu {
         if(selection.size()<2){
             options.add(rename);
             if(selection.lastElement().isFile()&&selection.lastElement().getName().substring(1).contains(".")){
-                if(ics.getForExtension(selection.lastElement().getName())==null)
+                if(ics.getForExtension(selection.lastElement().getName(),1,1)==null)
                      options.add(iconss);
                 else
                      options.add(iconsd);
