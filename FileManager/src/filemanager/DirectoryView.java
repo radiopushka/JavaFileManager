@@ -385,6 +385,11 @@ public class DirectoryView {
                            // Logger.getLogger(DirectoryView.class.getName()).log(Level.SEVERE, null, ex);
                            top.setIcon(new ImageIcon(generateIconForFile(image,false)));
                         }
+                        try {
+                            Thread.sleep(50);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(DirectoryView.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     }
                     
                    }};
