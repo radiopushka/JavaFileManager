@@ -366,8 +366,8 @@ public class DirectoryView {
                    
                     
                     while(!thread_file.isEmpty()){
-                        JButton top=thread_btn.lastElement();
-                        File image=thread_file.lastElement();
+                        JButton top=thread_btn.firstElement();
+                        File image=thread_file.firstElement();
                         thread_btn.remove(top);
                         thread_file.remove(image);
                         try {
