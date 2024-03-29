@@ -642,7 +642,7 @@ public class DirectoryView {
             }
             grph.drawImage(impose, 0, 0, null);
             if(suffix!=null){
-                grph.drawString(suffix, icon_size>>2, extrabtm);
+                grph.drawString(suffix, icon_size>>2, font_size);
             }
         }catch(IOException e){}
         BufferedImage ret=new BufferedImage(icon_size,icon_size+font_size*5,BufferedImage.TYPE_4BYTE_ABGR);
