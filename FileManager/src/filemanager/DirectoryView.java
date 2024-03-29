@@ -6,6 +6,7 @@ package filemanager;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.DisplayMode;
 import java.awt.Font;
 import java.awt.Graphics2D;
@@ -17,10 +18,14 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReadParam;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -40,6 +45,7 @@ public class DirectoryView {
     private final int icon_size=64;
     private final CustomIcons cmicons;
     private final int font_size=12;
+    private final int max_width;
     private final String[] imageformats;
     private final String font_size_string;
     private final Vector<JButton> thread_btn;
@@ -57,6 +63,7 @@ public class DirectoryView {
         DisplayMode dsp=GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode();
         maxfiles=(dsp.getWidth()/icon_size)*(dsp.getHeight()/icon_size);
         cmicons=new CustomIcons();
+        max_width=((int)(icon_size/(font_size*1.33))*2)+1;
         holder=window;
         try {
             load_icon=ImageIO.read(FileManager.class.getResourceAsStream("load.png"));
@@ -336,6 +343,7 @@ public class DirectoryView {
        if(dispatched.isAlive())
            dispatched.interrupt();
        thread_btn.clear();
+       
        thread_file.clear();
     }
    
@@ -346,12 +354,12 @@ public class DirectoryView {
               
                  //draw load icon
                          BufferedImage impose=load_icon;
-                         BufferedImage drim2=new BufferedImage(icon_size,icon_size+font_size,BufferedImage.TYPE_4BYTE_ABGR);
+                         BufferedImage drim2=new BufferedImage(icon_size,icon_size+font_size*5,BufferedImage.TYPE_4BYTE_ABGR);
                          Graphics2D grph2=drim2.createGraphics();
                          grph2.setFont(Font.decode("dialogue-"+font_size_string));
                          grph2.setColor(Color.BLACK);
-                         grph2.drawString(imagein.getName(), 0, icon_size);
-                         grph2.drawImage(impose, 0, 0,icon_size,icon_size-font_size, null);
+                         draw_name(imagein.getName(),grph2);
+                         grph2.drawImage(impose, 0, 0,icon_size,icon_size, null);
                         in.setIcon(new ImageIcon(drim2));
                         in.validate();
                         holder.repaint();
@@ -371,24 +379,71 @@ public class DirectoryView {
                         File image=thread_file.firstElement();
                         thread_btn.remove(top);
                         thread_file.remove(image);
+                        String name=image.getName();
                         try {
-                            BufferedImage impose=ImageIO.read(image);
-                            BufferedImage drim=new BufferedImage(icon_size,icon_size+font_size,BufferedImage.TYPE_4BYTE_ABGR);
+                            
+                            ImageInputStream imns=ImageIO.createImageInputStream(image);
+                            Iterator<ImageReader> imr=ImageIO.getImageReaders(imns);
+                            BufferedImage impose;
+                            if(!imr.hasNext()){
+                               
+                                impose=ImageIO.read(image);
+                            }else{
+                            
+                              ImageReader im=imr.next();
+                              im.setInput(imns);
+                              int iw=im.getWidth(0)/icon_size;
+                              if(iw<1)
+                                    iw=1;
+                            
+                              int ih=im.getHeight(0)/icon_size;
+                              if(ih<1)
+                                  ih=1;
+                              ImageReadParam pram=new ImageReadParam();
+                            
+                              pram.setSourceProgressivePasses(1, 1);
+                              if(pram.canSetSourceRenderSize())
+                                 pram.setSourceRenderSize(new Dimension(icon_size,icon_size));
+                               else{
+                                 pram.setSourceSubsampling(iw, ih, 0, 0);
+                               }
+                                
+                                impose=im.read(0,pram);
+                            }
+                            
+                            BufferedImage drim=new BufferedImage(icon_size,icon_size+font_size*5,BufferedImage.TYPE_4BYTE_ABGR);
                             Graphics2D grph=drim.createGraphics();
                             grph.setFont(Font.decode("dialogue-"+font_size_string));
                             grph.setColor(Color.BLACK);
-                            grph.drawString(image.getName(), 0, icon_size);
-                            grph.drawImage(impose, 0, 0,icon_size,icon_size-font_size, null);
+                            draw_name(name,grph);
+                            grph.drawImage(impose, 0, 0,icon_size,icon_size, null);
                             top.setIcon(new ImageIcon(drim));
                             top.validate();
-                        } catch (IOException ex) {
-                           // Logger.getLogger(DirectoryView.class.getName()).log(Level.SEVERE, null, ex);
-                           top.setIcon(new ImageIcon(generateIconForFile(image,false)));
+                        } catch (IOException | UnsupportedOperationException ex) {
+                            Logger.getLogger(DirectoryView.class.getName()).log(Level.SEVERE, null, ex);
+                         
+                             BufferedImage preload=cmicons.getForExtension(image.getName().toLowerCase(),icon_size,icon_size);
+                             if(preload!=null)
+                                 top.setIcon(new ImageIcon(preload));
+                             else{
+                                try{
+                                  if(imagecache[1]==null){
+                                        imagecache[1]=ImageIO.read(FileManager.class.getResourceAsStream("image.png"));
+                                        imagecache[1]=clone_image(imagecache[1],icon_size,icon_size);
+                                        
+                                    }
+                                  top.setIcon(new ImageIcon(imagecache[1]));
+                                }catch(IOException e){}
+                                  
+                             }
+                                 
+                             
+                               
                         }
                         try {
                             Thread.sleep(50);
                         } catch (InterruptedException ex) {
-                            Logger.getLogger(DirectoryView.class.getName()).log(Level.SEVERE, null, ex);
+                           
                         }
                     }
                     
@@ -397,6 +452,56 @@ public class DirectoryView {
                  dispatched.start();
                 
           
+    }
+    private void draw_name(String name,Graphics2D grph){
+                           int length=name.length();
+                           double dltmp=length/(max_width*1.0);
+                           int dl=(int)dltmp;
+                           if(dltmp-dl>0.4){
+                               dl++;
+                           }
+                           if(dl>3){
+                                int half=(length>>1);
+                                int bhalf=half-(max_width>>1);
+                                if(bhalf<max_width){
+                                    bhalf=max_width;
+                                }
+                                int thalf=bhalf+(max_width-3);
+                                String top_s=name.substring(0,max_width);
+                                String b_s=name.substring(length-max_width);
+                                int tsi=length-max_width;
+                                if(b_s.contains(".")){
+                                    int dotindex=name.lastIndexOf(".");
+                                    int start=dotindex-max_width;
+                                    if(start<0){
+                                        start=0;
+                                    }
+                                    tsi=start;
+                                    b_s=name.substring(start,dotindex);
+                                }
+                               if(thalf>tsi){
+                                   thalf=tsi;
+                               }
+                               int total_size=thalf-bhalf;
+                               String append="";
+                               if(total_size>1){
+                                   append=name.substring(bhalf,thalf);
+                               }
+                               grph.drawString(top_s, 0, icon_size+font_size);
+                               grph.drawString("..."+append, 0, icon_size+(font_size<<1));
+                               grph.drawString(b_s, 0, icon_size+font_size+(font_size<<1));
+                                
+                            }else if(dl>2){
+                                grph.drawString(name.substring(0,max_width), 0, icon_size+font_size);
+                                grph.drawString(name.substring(max_width,max_width<<1), 0, icon_size+(font_size<<1));
+                                grph.drawString(name.substring(max_width<<1), 0, icon_size+(font_size<<1)+font_size);
+                            }else if(dl>1){
+                                grph.drawString(name.substring(0,max_width), 0, icon_size+font_size);
+                                grph.drawString(name.substring(max_width), 0, icon_size+(font_size<<1));
+                            }else{
+                                grph.drawString(name, 0, icon_size+font_size);
+                                
+                            }
     }
     private String SpacetoInt(long space){
         long KB=space/1000;
@@ -452,9 +557,9 @@ public class DirectoryView {
     private BufferedImage drim=null;
     private Graphics2D grph=null;
     private BufferedImage generateIconForFile(File in,boolean isdir){
-        int extrabtm=font_size;
+        int extrabtm=0;
         if(drim==null){
-            drim=new BufferedImage(icon_size,icon_size+extrabtm,BufferedImage.TYPE_4BYTE_ABGR);
+            drim=new BufferedImage(icon_size,icon_size+font_size*5,BufferedImage.TYPE_4BYTE_ABGR);
             grph=drim.createGraphics();
             grph.setFont(Font.decode("default-"+font_size_string));
             grph.setBackground(new Color(0,true));
@@ -463,12 +568,13 @@ public class DirectoryView {
         }else{
             
             
-            grph.clearRect(0, 0, icon_size, icon_size+extrabtm);
+            grph.clearRect(0, 0, icon_size, icon_size+font_size*5);
         }
         
         String name=in.getName();
         String suffix=null;
-        grph.drawString(name, 0, icon_size);
+       
+        draw_name(name,grph);
         String inlower=in.getName().toLowerCase();
         BufferedImage tmp;
         try{
@@ -539,7 +645,7 @@ public class DirectoryView {
                 grph.drawString(suffix, icon_size>>2, extrabtm);
             }
         }catch(IOException e){}
-        BufferedImage ret=new BufferedImage(icon_size,icon_size+extrabtm,BufferedImage.TYPE_4BYTE_ABGR);
+        BufferedImage ret=new BufferedImage(icon_size,icon_size+font_size*5,BufferedImage.TYPE_4BYTE_ABGR);
         ret.setData(drim.getData());
         return ret;
     }
