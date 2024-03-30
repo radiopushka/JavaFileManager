@@ -62,19 +62,19 @@ public class ContextMenu {
         JButton copy=new JButton("copy");
         copy.addActionListener((ActionEvent e) -> {
             FileOperations.queueCopy(selection);
-            SwingUtilities.getWindowAncestor(copy).setVisible(false);
+            SwingUtilities.getWindowAncestor(copy).dispose();
         });
         options.add(copy);
         JButton paste=new JButton("paste here");
         paste.addActionListener((ActionEvent e) -> {
-             FileOperations.CopyFromQueue(location, parent);
-             SwingUtilities.getWindowAncestor(paste).setVisible(false);
+             FileOperations.CopyFromQueue(location, parent,false);
+             SwingUtilities.getWindowAncestor(paste).dispose();
         });
         options.add(paste);
         JButton move=new JButton("move here");
         move.addActionListener((ActionEvent e) -> {
-            FileOperations.MoveFromQueue(location, parent);
-            SwingUtilities.getWindowAncestor(move).setVisible(false);
+            FileOperations.CopyFromQueue(location, parent,true);
+            SwingUtilities.getWindowAncestor(move).dispose();
         });
         options.add(move);
         JButton delete=new JButton("delete");
@@ -83,7 +83,7 @@ public class ContextMenu {
             while(flist.hasMoreElements()){
                 File ele=flist.nextElement();
                 FileOperations.delete(ele);
-                SwingUtilities.getWindowAncestor(delete).setVisible(false);
+                SwingUtilities.getWindowAncestor(delete).dispose();
             }
         });
         options.add(delete);
@@ -99,7 +99,7 @@ public class ContextMenu {
 
         }
         rename.addActionListener((ActionEvent e) -> {
-            SwingUtilities.getWindowAncestor(rename).setVisible(false);
+            SwingUtilities.getWindowAncestor(rename).dispose();
             File f=selection.firstElement();
             JTextField jft=new JTextField(f.getName());
             if(JOptionPane.showConfirmDialog(parent, jft, "rename", JOptionPane.OK_CANCEL_OPTION)==JOptionPane.OK_OPTION){
@@ -118,13 +118,13 @@ public class ContextMenu {
             if(path==null)
                 return;
             ics.putForExtension(selection.lastElement().getName(),new File(path));
-            SwingUtilities.getWindowAncestor(iconss).setVisible(false);
+            SwingUtilities.getWindowAncestor(iconss).dispose();
 
         });
         iconsd.addActionListener((ActionEvent e) -> {
             
             ics.removeForExtension(selection.lastElement().getName());
-            SwingUtilities.getWindowAncestor(iconsd).setVisible(false);
+            SwingUtilities.getWindowAncestor(iconsd).dispose();
 
         });
         JOptionPane.showMessageDialog(parent,options);

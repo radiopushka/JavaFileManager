@@ -1,5 +1,8 @@
 package filemanager;
 
+import java.awt.Component;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -11,6 +14,8 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 /*
@@ -117,6 +122,9 @@ public class mainView extends javax.swing.JFrame {
         Contain.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 ContainKeyPressed(evt);
+            }
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                ContainKeyTyped(evt);
             }
         });
         Contain.addVetoableChangeListener(new java.beans.VetoableChangeListener() {
@@ -264,9 +272,7 @@ public class mainView extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
+    public static void moveBKWD(){
         String path=dh.getPath();
         if(path!=null){
             while(path.equals(drview.currentdir)){
@@ -277,10 +283,12 @@ public class mainView extends javax.swing.JFrame {
             drview.drawDirectory(path, true);
             jTextField1.setText(drview.currentdir);
         }
-    }//GEN-LAST:event_jButton1ActionPerformed
-
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+    }
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
+        moveBKWD();
+    }//GEN-LAST:event_jButton1ActionPerformed
+    public static void moveFWD(){
         String path=dh.getFWD();
         if(path!=null){
              while(path.equals(drview.currentdir)){
@@ -291,6 +299,10 @@ public class mainView extends javax.swing.JFrame {
             drview.drawDirectory(path, true);
             jTextField1.setText(drview.currentdir);
         }
+    }
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        // TODO add your handling code here:
+       moveFWD();
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
@@ -312,12 +324,12 @@ public class mainView extends javax.swing.JFrame {
 
     private void ContainKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_ContainKeyPressed
         // TODO add your handling code here:
-       
+      
     }//GEN-LAST:event_ContainKeyPressed
 
     private void formKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_formKeyPressed
         // TODO add your handling code here:
-       
+       //searchAction(); need to use keyboard manager
     }//GEN-LAST:event_formKeyPressed
 
     private void jSplitPane1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jSplitPane1KeyPressed
@@ -327,6 +339,7 @@ public class mainView extends javax.swing.JFrame {
 
     private void jPanel1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jPanel1KeyPressed
         // TODO add your handling code here:
+        
     }//GEN-LAST:event_jPanel1KeyPressed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
@@ -397,26 +410,33 @@ public class mainView extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jList1MouseClicked
 
+    private static void searchAction(JFrame parent){
+         String prompt=JOptionPane.showInputDialog(parent, "search");
+        if(prompt!=null){
+            drview.drawDirectory(drview.currentdir, true,prompt);
+        }
+    }
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
         // TODO add your handling code here:
-         FileOperations.CopyFromQueue(new File(drview.currentdir), this);
+         FileOperations.CopyFromQueue(new File(drview.currentdir), this,false);
+         refresh(this);
     }//GEN-LAST:event_jButton6ActionPerformed
-
-    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
-        // TODO add your handling code here:
+    private static void refresh(mainView mv){
         CommandManager cmm=new CommandManager();
         Vector<String> saveddirs=cmm.getVectorS("SavedDirs");
-        jList1.setListData(getListFormat(saveddirs));
+        mv.jList1.setListData(getListFormat(saveddirs));
         drview.clearCache();
+        drview.clear_selection();
         drview.drawDirectory(drview.currentdir, true);
+    }
+    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+        // TODO add your handling code here:
+       refresh(this);
     }//GEN-LAST:event_jButton7ActionPerformed
 
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
         // TODO add your handling code here:
-        String prompt=JOptionPane.showInputDialog(this, "search");
-        if(prompt!=null){
-            drview.drawDirectory(drview.currentdir, true,prompt);
-        }
+       searchAction(this);
     }//GEN-LAST:event_jButton8ActionPerformed
 
     private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
@@ -440,6 +460,11 @@ public class mainView extends javax.swing.JFrame {
         // TODO add your handling code here:
        // System.out.println(evt.getPropertyName());
     }//GEN-LAST:event_ContainPropertyChange
+
+    private void ContainKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_ContainKeyTyped
+        // TODO add your handling code here:
+       
+    }//GEN-LAST:event_ContainKeyTyped
 
     /**
      * @param args the command line arguments
@@ -492,6 +517,7 @@ public class mainView extends javax.swing.JFrame {
                 Logger.getLogger(mainView.class.getName()).log(Level.SEVERE, null, ex);
             }
             CommandManager cmm=new CommandManager();
+            mv.setFocusTraversalKeysEnabled(true);
             Vector<String> saveddirs=cmm.getVectorS("SavedDirs");
             mv.jList1.setListData(getListFormat(saveddirs));
             dh=new DHistory();
@@ -525,6 +551,64 @@ public class mainView extends javax.swing.JFrame {
                     jTextField1.setText(dir);
                     dh.addPath(prev);
                     dh.addPath(dir);
+                }
+            });
+            boolean off[]=new boolean[3];
+            off[0]=false;
+            off[1]=false;
+            off[2]=false;
+            KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher(){
+                @Override
+                public boolean dispatchKeyEvent(KeyEvent e) {
+                    if(off[0])
+                        return false;
+                    
+                    if((e.getModifiersEx()&KeyEvent.CTRL_DOWN_MASK)!=0){
+                        
+                        off[0]=true;
+                       
+                        switch(e.getKeyCode()){
+                            case KeyEvent.VK_F:
+                                searchAction(mv);
+                                break;
+                            case KeyEvent.VK_S:
+                                searchAction(mv);
+                                break;
+                            case KeyEvent.VK_R:
+                                  refresh(mv);
+                                  break;
+                            case KeyEvent.VK_V:
+                                 FileOperations.CopyFromQueue(new File(drview.currentdir), mv,false);
+                                 refresh(mv);
+                                 break;
+                            case KeyEvent.VK_C:
+                                drview.triggerCopy();
+                                break;
+                            case KeyEvent.VK_Z:
+                                if(!off[1]){
+                                    moveBKWD();
+                                    off[1]=true;
+                                }else{
+                                    off[1]=false;
+                                }
+                                break;
+                            case KeyEvent.VK_X:
+                                 if(!off[2]){
+                                    moveFWD();
+                                    off[2]=true;
+                                }else{
+                                    off[2]=false;
+                                }
+                                break;
+                            case KeyEvent.VK_H:
+                                dh.addPath(drview.currentdir);
+                                break;
+                                   
+                        }
+                        off[0]=false;
+                       
+                    }
+                    return false;
                 }
             });
             mv.setVisible(true);

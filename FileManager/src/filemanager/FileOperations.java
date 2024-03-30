@@ -7,6 +7,8 @@ package filemanager;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.Window;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -15,6 +17,8 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JCheckBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -104,69 +108,67 @@ public class FileOperations {
             
         }
     }
-    public static void copyFile(File src,File dest,Component dialogue_parent){
+    public static void copyFile(File src,File dest,JFrame dialogue_parent,boolean move){
         JLabel copy_data=new JLabel("starting");
-        boolean done[]=new boolean[1];
-        done[0]=false;
-        new Thread(){
-            @Override
-            public void run(){
-                while(!copy_data.getText().equals("done"))
-                         JOptionPane.showMessageDialog(dialogue_parent, copy_data);
-                done[0]=true;
-            }
-        }.start();
-        new Thread(){
+        Thread run;
+        
+        JDialog jf=new JDialog(dialogue_parent);
+        jf.setSize(200, 70);
+        jf.setLocation(dialogue_parent.getX()+dialogue_parent.getWidth()/2-100, dialogue_parent.getY()+dialogue_parent.getHeight()/2-35);
+        jf.setLayout(new GridLayout(1,1));
+        jf.add(copy_data);
+        jf.setVisible(true);
+        run =new Thread(){
             @Override
             public void run(){
                 copy(src,dest,copy_data);
-                copy_data.setText("done");
-                Window swrl=SwingUtilities.getWindowAncestor(copy_data);
-                 while(swrl==null&&!done[0]){
-                     swrl=SwingUtilities.getWindowAncestor(copy_data);
-                 }
-                 if(swrl!=null){
-                     swrl.setVisible(false);
-                 }
-            }  
-        }.start();
-    }
-    public static void moveFile(File src,File dest,Component dialogue_parent){
-        JLabel copy_data=new JLabel("starting");
-        boolean done[]=new boolean[1];
-        done[0]=false;
-        new Thread(){
-            @Override
-            public void run(){
-                while(!copy_data.getText().equals("done"))
-                         JOptionPane.showMessageDialog(dialogue_parent, copy_data);
-                done[0]=true;
-            }
-        }.start();
-        new Thread(){
-            @Override
-            public void run(){
-                copy(src,dest,copy_data);
+                if(move)
+                    delete(src);
                 
-                 delete(src);
-                 copy_data.setText("done");
-                 Window swrl=SwingUtilities.getWindowAncestor(copy_data);
-                 while(swrl==null&&!done[0]){
-                     swrl=SwingUtilities.getWindowAncestor(copy_data);
-                 }
-                 if(swrl!=null){
-                     swrl.setVisible(false);
-                 }
-               
+               jf.dispose();
+                
             }  
-        }.start();
+        };run.start();
+        jf.addWindowListener(new WindowListener() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+            }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+            }
+
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if(run.isAlive()){
+                    run.interrupt();
+                }
+            }
+
+            @Override
+            public void windowIconified(WindowEvent e) {
+            }
+
+            @Override
+            public void windowDeiconified(WindowEvent e) {
+            }
+
+            @Override
+            public void windowActivated(WindowEvent e) {
+            }
+
+            @Override
+            public void windowDeactivated(WindowEvent e) {
+            }
+        });
     }
+    
     public static void queueCopy(Vector<File> selection){
         CommandManager cmdm=new CommandManager();
         cmdm.clearVector("copyfiles");
         cmdm.putVector("copyfiles", selection);
     }
-    public static void CopyFromQueue(File dest,Component parent){
+    public static void CopyFromQueue(File dest,JFrame parent,boolean move){
         overwrite=0;
         files_copied=0;
         CommandManager cmdm=new CommandManager();
@@ -179,27 +181,10 @@ public class FileOperations {
                 tdest.mkdir();
             }
             if(!src.getParent().equals(dest.getAbsolutePath()))
-                  copyFile(src,tdest,parent);
+                  copyFile(src,tdest,parent,move);
         }
         cmdm.clearVector("copyfiles");
         cmdm.flush();
     }
-     public static void MoveFromQueue(File dest,Component parent){
-        overwrite=0;
-        files_copied=0;
-        CommandManager cmdm=new CommandManager();
-        Enumeration<File> files=cmdm.getVector("copyfiles").elements();
-        while(files.hasMoreElements()){
-            File src=files.nextElement();
-            File tdest=dest;
-            if(src.isDirectory()){
-                tdest=new File(dest.getAbsolutePath()+File.separator+src.getName());
-                tdest.mkdir();
-            }
-            if(!src.getParent().equals(dest.getAbsolutePath()))
-                   moveFile(src,tdest,parent);
-        }
-        cmdm.clearVector("copyfiles");
-        cmdm.flush();
-    }
+     
 }

@@ -55,6 +55,8 @@ public class DirectoryView {
     private BufferedImage load_icon;
     private final BufferedImage imagecache[]=new BufferedImage[5];
     private File prev[]=null;
+    public File hover_over=null;
+    private JButton hover_targ=null;
     private int maxfiles=400;
     private DirChangeListener drls=null;
     private boolean wassearch=false;
@@ -82,6 +84,16 @@ public class DirectoryView {
     }
     public void drawDirectory(String path,boolean repaint){
         drawDirectory(path,repaint,null);
+    }
+    public void triggerCopy(){
+        if(selection.size()<1&&hover_over!=null){
+            if(!selection.contains(hover_over)){
+                selection.add(hover_over);
+                hover_targ.setText("<>");
+            }
+        }
+        FileOperations.queueCopy(selection);
+        
     }
     private File[] sort(File[] input){
         if(input==null)
@@ -133,10 +145,22 @@ public class DirectoryView {
         }
         return true;
     }
-   
-    public void drawDirectory(String path,boolean repaint,String search){
-        
+    public void clear_selection(){
         selection.clear();
+        Component cmp[]=mainView.getComponents();
+             boolean first=false;
+             for(Component cm:cmp){
+                 if(first){
+                     JButton btn=(JButton)cm;
+                     btn.setText("");
+                 }
+                 first=true;
+             }
+        
+    }
+    public void drawDirectory(String path,boolean repaint,String search){
+        hover_over=null;
+        
         File cdir=new File(path);
         if(!cdir.exists()){
             return;
@@ -163,15 +187,7 @@ public class DirectoryView {
          if(current_layout_size>=0&&search==null&&prev!=null&&compare(prev,dirlist)){
              int elements=current_layout_size+1;
              int rows=elements/cols;
-             Component cmp[]=mainView.getComponents();
-             boolean first=false;
-             for(Component cm:cmp){
-                 if(first){
-                     JButton btn=(JButton)cm;
-                     btn.setText("");
-                 }
-                 first=true;
-             }
+             
              while(rows*cols<elements){
                   rows++;
              }
@@ -180,6 +196,7 @@ public class DirectoryView {
              holder.repaint();
              return;
          }
+        selection.clear();
         wassearch = search!=null;
         killImageThreads();
         cmicons.clearNullCache();
@@ -277,8 +294,10 @@ public class DirectoryView {
                 @Override
                 public void mouseReleased(MouseEvent e) {
                     if(e.getButton()==MouseEvent.BUTTON3){
-                        if(!selection.contains(fcopy))
+                        if(!selection.contains(fcopy)){
                              selection.add(fcopy);
+                             click.setText("<>");
+                        }
                         ContextMenu cm=new ContextMenu(holder);
                         cm.optionsDialogue(selection,new File(currentdir),cmicons);
                         drawDirectory(path,true,null);
@@ -287,16 +306,13 @@ public class DirectoryView {
 
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                   /* if(bd[1])
-                        return;
-                    bd[1]=true;
-                    if(isFileImage(fcopy.getName().toLowerCase())){
-                        setButtonImageResp(click, fcopy,bd);
-                    }*/
+                  hover_over=fcopy;
+                  hover_targ=click;
                 }
 
                 @Override
                 public void mouseExited(MouseEvent e) {
+                    hover_over=null;
                 }
             });
           
@@ -420,7 +436,7 @@ public class DirectoryView {
                             top.setIcon(new ImageIcon(drim));
                             top.validate();
                         } catch (IOException | UnsupportedOperationException ex) {
-                            Logger.getLogger(DirectoryView.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(DirectoryView.class.getName()).log(Level.WARNING, "failed to load image", ex);
                          
                              BufferedImage preload=cmicons.getForExtension(image.getName().toLowerCase(),icon_size,icon_size);
                              if(preload!=null)

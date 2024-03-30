@@ -120,7 +120,7 @@ public class OpenPreferences {
         });
         launch.addActionListener((ActionEvent e) -> {
             String command=(String)jl.getSelectedValue();
-            SwingUtilities.getWindowAncestor(launch).setVisible(false);
+            SwingUtilities.getWindowAncestor(launch).dispose();
             if(command!=null){
                 if(in==null)
                      runCommand(command,null);
