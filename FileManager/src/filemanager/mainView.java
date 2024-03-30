@@ -341,7 +341,19 @@ public class mainView extends javax.swing.JFrame {
         // TODO add your handling code here:
         
     }//GEN-LAST:event_jPanel1KeyPressed
-
+    private static void run_term(JFrame parent){
+            CommandManager cmd=new CommandManager();
+             String cmdl=cmd.getString("Terminal", null);
+             if(cmdl==null){
+                 String prompt=JOptionPane.showInputDialog(parent, "Open Terminal Command",cmd.getString("Terminal", ""));
+                 if(prompt!=null){
+                   cmd.putString("Terminal", prompt);
+                   cmd.flush();
+                   cmdl=prompt;
+                 }
+             }
+             OpenPreferences.runCommand(cmdl, drview.currentdir);
+    }
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
         // TODO add your handling code here:
         if((evt.getModifiers()|ActionEvent.SHIFT_MASK)==evt.getModifiers()){
@@ -352,17 +364,8 @@ public class mainView extends javax.swing.JFrame {
                  cmd.flush();
              }
         }else{
-             CommandManager cmd=new CommandManager();
-             String cmdl=cmd.getString("Terminal", null);
-             if(cmdl==null){
-                 String prompt=JOptionPane.showInputDialog(this, "Open Terminal Command",cmd.getString("Terminal", ""));
-                 if(prompt!=null){
-                   cmd.putString("Terminal", prompt);
-                   cmd.flush();
-                   cmdl=prompt;
-                 }
-             }
-             OpenPreferences.runCommand(cmdl, drview.currentdir);
+            
+            run_term(this);
              
              
         }
@@ -553,10 +556,11 @@ public class mainView extends javax.swing.JFrame {
                     dh.addPath(dir);
                 }
             });
-            boolean off[]=new boolean[3];
+            boolean off[]=new boolean[4];
             off[0]=false;
             off[1]=false;
             off[2]=false;
+            off[3]=false;
             KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher(){
                 @Override
                 public boolean dispatchKeyEvent(KeyEvent e) {
@@ -602,6 +606,14 @@ public class mainView extends javax.swing.JFrame {
                                 break;
                             case KeyEvent.VK_H:
                                 dh.addPath(drview.currentdir);
+                                break;
+                            case KeyEvent.VK_T:
+                                if(!off[3]){
+                                    run_term(mv);
+                                    off[3]=true;
+                                }else{
+                                    off[3]=false;
+                                }
                                 break;
                                    
                         }
