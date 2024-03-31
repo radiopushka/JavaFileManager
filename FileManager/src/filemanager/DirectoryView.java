@@ -196,7 +196,8 @@ public class DirectoryView {
              holder.repaint();
              return;
          }
-        selection.clear();
+        if(search==null)
+             selection.clear();
         wassearch = search!=null;
         killImageThreads();
         cmicons.clearNullCache();
@@ -243,6 +244,8 @@ public class DirectoryView {
                    click.setIcon(new ImageIcon(generateIconForFile(fcopy,isdir)));
 
              }
+            if(selection.contains(fcopy))
+                click.setText("<>");
             click.setToolTipText(fcopy.getName()+" - "+SpacetoInt(fcopy.length()));
             click.addActionListener((ActionEvent e) -> {
                 MultiSelectListener(e,click,fcopy);
