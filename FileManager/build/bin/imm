@@ -1,0 +1,181 @@
+#!/bin/bash
+
+getDir(){
+  export $2=`dirname $1`
+}
+
+testJDK(){
+  if test -f $JAVA_HOME/bin/$2 ; then
+      echo "$2 is in jdk"
+      export  $1=$JAVA_HOME/bin/$2
+  else
+      echo "$2 is not a part of your java development kit (jdk)"
+      exit
+  fi
+}
+
+if test -z $IOBLAKO_HOME ; then
+  IOBLAKO_HOME=`pwd`
+   getDir $IOBLAKO_HOME IOBLAKO_HOME 
+   getDir $IOBLAKO_HOME IOBLAKO_HOME 
+  echo "IOBLAKO_HOME=$IOBLAKO_HOME"
+fi
+if test -z $JAVA_HOME ; then
+  echo "JAVA_HOME is not defined"
+  echo "export JAVA_HOME=\"your jdk location\""
+  exit
+else
+echo "JAVA_HOME=$JAVA_HOME"
+  testJDK JMOD jmod
+  testJDK JAVA java
+  testJDK JAR jar
+  testJDK JAVAC javac
+fi
+echo "Environment variables for the script \"$0\""
+echo "IOBLAKO_HOME=$IOBLAKO_HOME"
+echo "JAVA_HOME=$JAVA_HOME"
+echo "JAVA=$JAVA"
+export JAVAC="$JAVAC -Xlint"
+echo "JAVAC=$JAVAC"
+echo "JAR=$JAR"
+echo "JMOD=$JMOD"
+
+
+MOD_DIR=$IOBLAKO_HOME/build/modules
+export MOD_DIR
+
+CLASSPATH=`echo $MOD_DIR/*|tr ' ' ':'`
+export CLASSPATH
+echo $CLASSPATH
+
+$JAVA --version
+
+
+assembleMod(){
+echo "building $2"
+# $JAVAC -classpath $CLASSPATH -p $IOBLAKO_HOME/build/jmods:$MOD_DIR  -d $MOD_DIR/$1 $IOBLAKO_HOME/src/$1/module-info.java
+# $JAVAC -classpath $CLASSPATH -d $MOD_DIR/$1 $IOBLAKO_HOME/src/$1/module-info.java
+ $JAR --create --file $IOBLAKO_HOME/build/lib/$2.jar -C $MOD_DIR/$1 .
+if [ $# == 4 ]; then
+$JMOD create -p $MOD_DIR/$1 --module-path  $IOBLAKO_HOME/build/jmods:$MOD_DIR --class-path $IOBLAKO_HOME/build/lib/$2.jar  $2.jmod
+else
+ if [ $# == 3 ]; then
+$JMOD create -p $MOD_DIR/$1 --module-path  $IOBLAKO_HOME/build/jmods:$MOD_DIR --class-path $IOBLAKO_HOME/build/lib/$2.jar --main-class $3 $2.jmod
+else
+$JMOD create -p $MOD_DIR/$1 --module-path  $IOBLAKO_HOME/build/jmods:$MOD_DIR --class-path $IOBLAKO_HOME/build/lib/$2.jar --hash-modules org.ioblako.edit $2.jmod
+fi
+fi
+if [ -f $IOBLAKO_HOME/build/jmods/$2.jmod ]; then
+ rm $IOBLAKO_HOME/build/jmods/$2.jmod
+fi
+mv $2.jmod $IOBLAKO_HOME/build/jmods
+}
+compileFile(){
+echo "Compiling $1"
+file=$1
+fileClass=`echo $file|sed 's/\.java/\.class/g'`
+first=`echo $fileClass|awk -F\/src\/ '{print $1}'`
+second=`echo $fileClass|awk -F\/src\/ '{print $2}'`
+fileClass=$first"/build/modules/$2/"$second
+if [ -f $fileClass ]; then
+if test $fileClass -ot $file
+then
+# $JAVAC -classpath $CLASSPATH -p $IOBLAKO_HOME/build/jmods  -d $MOD_DIR/$2 $file
+ $JAVAC -classpath $CLASSPATH -d $MOD_DIR/$2 $file
+fi
+else
+# $JAVAC -classpath $CLASSPATH -p $IOBLAKO_HOME/build/jmods  -d $MOD_DIR/$2 $file
+ $JAVAC -classpath $CLASSPATH  -d $MOD_DIR/$2 $file
+fi
+}
+compileModuleFromTheDir(){
+ $JAVAC -classpath $CLASSPATH -p $IOBLAKO_HOME/build/jmods  -d $MOD_DIR/$1 $IOBLAKO_HOME/src/$1/module-info.java
+}
+compileFilesInTheDir(){
+echo "Compiling $1"
+# $JAVAC -classpath $CLASSPATH -p $IOBLAKO_HOME/build/jmods  -d $MOD_DIR/$2 $IOBLAKO_HOME/src/$2/module-info.java
+for file in `ls -1 $IOBLAKO_HOME/src/$1/*.java`
+do
+fileClass=`echo $file|sed 's/\.java/\.class/g'`
+first=`echo $fileClass|awk -F\/src\/ '{print $1}'`
+second=`echo $fileClass|awk -F\/src\/ '{print $2}'`
+fileClass=$first"/build/modules/$2/"$second
+if [ -f $fileClass ]; then
+if test $fileClass -ot $file
+then
+# $JAVAC -classpath $CLASSPATH -p $IOBLAKO_HOME/build/jmods  -d $MOD_DIR/$2 $file
+ $JAVAC -classpath $CLASSPATH  -d $MOD_DIR/$2 $file
+fi
+else
+# $JAVAC -classpath $CLASSPATH -p $IOBLAKO_HOME/build/jmods  -d $MOD_DIR/$2 $file
+ $JAVAC -classpath $CLASSPATH  -d $MOD_DIR/$2 $file
+fi
+done
+echo "Success $2"
+}
+compile(){
+echo "Compiling $1"
+ $JAVAC -classpath $CLASSPATH -p $IOBLAKO_HOME/build/jmods  -d $MOD_DIR/$2 $IOBLAKO_HOME/src/$2/module-info.java
+for file in `find $IOBLAKO_HOME/src/$1/ -name *.java`
+do
+fileClass=`echo $file|sed 's/\.java/\.class/g'`
+first=`echo $fileClass|awk -F\/src\/ '{print $1}'`
+second=`echo $fileClass|awk -F\/src\/ '{print $2}'`
+fileClass=$first"/build/modules/$2/"$second
+if [ -f $fileClass ]; then
+if test $fileClass -ot $file
+then
+ $JAVAC -classpath $CLASSPATH -p $IOBLAKO_HOME/build/jmods  -d $MOD_DIR/$2 $file
+fi
+else
+ $JAVAC -classpath $CLASSPATH -p $IOBLAKO_HOME/build/jmods  -d $MOD_DIR/$2 $file
+fi
+done
+echo "Success $2"
+}
+fastCompile(){
+ $JAVAC -classpath $CLASSPATH  -p $IOBLAKO_HOME/build/jmods  -d $MOD_DIR/$2 $IOBLAKO_HOME/src/$2/module-info.java  $(find $
+IOBLAKO_HOME/src/$1  -name *.java)
+echo "Success $2"
+}
+buildMod(){
+$JAVAC -classpath $CLASSPATH  -p $IOBLAKO_HOME/build/jmods  -d $MOD_DIR/$2 $IOBLAKO_HOME/src/$2/module-info.java
+for file in `find $IOBLAKO_HOME/src/$1/  -name *.java`
+do
+fileClass=`echo $file|sed 's/\.java/\.class/g'`
+first=`echo $fileClass|awk -F\/src\/ '{print $1}'`
+second=`echo $fileClass|awk -F\/src\/ '{print $2}'`
+fileClass=$first"/build/modules/$2/"$second
+if [ -f $fileClass ]; then
+if test $fileClass -ot $file
+then
+ $JAVAC -classpath $CLASSPATH -p $IOBLAKO_HOME/build/jmods:$JDK_MOD  -d $MOD_DIR/$2 $file
+fi
+else
+ $JAVAC -classpath $CLASSPATH -p $IOBLAKO_HOME/build/jmods:$JDK_MOD  -d $MOD_DIR/$2 $file
+fi
+done
+
+ $JAR --create --file $IOBLAKO_HOME/build/lib/$3.jar -C $MOD_DIR/$2 .
+$JMOD create -p $MOD_DIR/$2 --class-path $IOBLAKO_HOME/build/lib/$3.jar $3.jmod
+if [ -f $IOBLAKO_HOME/build/jmods/$3.jmod ]; then
+ rm $IOBLAKO_HOME/build/jmods/$3.jmod
+fi
+mv $3.jmod $IOBLAKO_HOME/build/jmods
+echo "Success $2"
+}
+
+	compileFile $IOBLAKO_HOME/src/filemanager/module-info.java filemanager
+	compileFile $IOBLAKO_HOME/src/filemanager/CommandManager.java filemanager
+	compileFile $IOBLAKO_HOME/src/filemanager/FileOperations.java filemanager
+	compileFile $IOBLAKO_HOME/src/filemanager/OpenPreferences.java filemanager
+	compileFile $IOBLAKO_HOME/src/filemanager/CustomIcons.java filemanager
+	compileFile $IOBLAKO_HOME/src/filemanager/ContextMenu.java filemanager
+	compileFile $IOBLAKO_HOME/src/filemanager/DirChangeListener.java filemanager
+	compileFile $IOBLAKO_HOME/src/filemanager/DirectoryView.java filemanager
+	compileFile $IOBLAKO_HOME/src/filemanager/DHistory.java filemanager
+	compileFile $IOBLAKO_HOME/src/filemanager/FileManager.java filemanager
+#compileFilesInTheDir filemanager filemanager
+compileModuleFromTheDir filemanager 
+assembleMod filemanager filemanager filemanager.FileManager
+

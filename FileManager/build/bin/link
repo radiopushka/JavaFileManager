@@ -1,0 +1,56 @@
+#!/bin/bash
+getDir(){
+  export $2=`dirname $1`
+}
+
+testJDK(){
+  if test -f $JAVA_HOME/bin/$2 ; then
+      echo "$2 is in jdk"
+      export  $1=$JAVA_HOME/bin/$2
+  else
+      echo "$2 is not a part of your java development kit (jdk)"
+      exit
+  fi
+}
+
+if test -z $IOBLAKO_HOME ; then
+  IOBLAKO_HOME=`pwd`
+   getDir $IOBLAKO_HOME IOBLAKO_HOME 
+   getDir $IOBLAKO_HOME IOBLAKO_HOME 
+  echo "IOBLAKO_HOME=$IOBLAKO_HOME"
+fi
+if test -z $JAVA_HOME ; then
+  echo "JAVA_HOME is not defined"
+  echo "export JAVA_HOME=\"your jdk location\""
+  exit
+else
+echo "JAVA_HOME=$JAVA_HOME"
+  testJDK JMOD jmod
+  testJDK JLINK jlink
+fi
+echo "Environment variables for the script \"$0\""
+echo "JAVA_HOME=$JAVA_HOME"
+echo "IOBLAKO_HOME=$IOBLAKO_HOME"
+echo "JLINK=$JLINK"
+echo "JMOD=$JMOD"
+
+ADDMYMODS=""
+for file in `ls $IOBLAKO_HOME/build/jmods/*.jmod`
+do
+  mymod=`$JMOD describe $file|head -n 1`
+if [ ! -z "$ADDMYMODS" ]; then
+   ADDMYMODS=$ADDMYMODS","$mymod
+else
+    ADDMYMODS=$mymod
+fi
+done
+echo $ADDMYMODS
+
+
+
+if [ -d $IOBLAKO_HOME/build/JavaFileManager ] 
+then
+rm -rf $IOBLAKO_HOME/build/JavaFileManager
+fi
+#$JLINK --module-path $JAVA_HOME/jmods/ --module-path $IOBLAKO_HOME/build/jmods/ --add-modules $ADDMYMODS  --output $IOBLAKO_HOME/build/jre
+$JLINK --module-path $JAVA_HOME/jmods:$IOBLAKO_HOME/build/jmods --add-modules $ADDMYMODS --launcher JavaFileManager=filemanager/filemanager.FileManager --output $IOBLAKO_HOME/build/JavaFileManager

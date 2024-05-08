@@ -1,0 +1,12 @@
+#!/bin/sh
+getDir(){
+  export $2=`dirname $1`
+}
+
+if test -z $IOBLAKO_HOME ; then
+  IOBLAKO_HOME=`pwd`
+   getDir $IOBLAKO_HOME IOBLAKO_HOME
+  echo "IOBLAKO_HOME=$IOBLAKO_HOME"
+fi
+
+$IOBLAKO_HOME/bin/clean_class.sh $IOBLAKO_HOME/modules/filemanager
