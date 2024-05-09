@@ -7,8 +7,8 @@ package filemanager;
 import java.io.File;
 import java.util.Enumeration;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+//import java.util.logging.Level;
+//import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -19,7 +19,8 @@ import java.util.prefs.Preferences;
 public class CommandManager {
     private final Preferences prefs;
     public CommandManager(){
-        prefs=Preferences.userNodeForPackage(FileManager.class);
+        //prefs=Preferences.userNodeForPackage(FileManager.class);
+        prefs=Preferences.userNodeForPackage(CommandManager.class);
     }
     public void putVector(String key,Vector<File> data){
         int i=0;
@@ -33,7 +34,8 @@ public class CommandManager {
             prefs.flush();
            
         } catch (BackingStoreException ex) {
-            Logger.getLogger(CommandManager.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(CommandManager.class.getName()).log(Level.SEVERE, null, ex);
+             System.out.println(ex.toString());
         }
     }
     public void putVectorS(String key,Vector<String> data){
@@ -47,7 +49,8 @@ public class CommandManager {
         try {
             prefs.flush();
         } catch (BackingStoreException ex) {
-            Logger.getLogger(CommandManager.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(CommandManager.class.getName()).log(Level.SEVERE, null, ex);
+             System.out.println(ex.toString());
         }
     }
     public void clearVector(String key){
@@ -63,7 +66,8 @@ public class CommandManager {
         try {
             prefs.sync();
         } catch (BackingStoreException ex) {
-            Logger.getLogger(CommandManager.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(CommandManager.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println(ex.toString());
         }
         Vector<File> ret=new Vector<>();
         while((pdata=prefs.get(key+"\\"+Integer.toString(i), null))!=null){
@@ -79,7 +83,8 @@ public class CommandManager {
         try {
             prefs.sync();
         } catch (BackingStoreException ex) {
-            Logger.getLogger(CommandManager.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(CommandManager.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println(ex.toString());
         }
         Vector<String> ret=new Vector<>();
         while((pdata=prefs.get(key+"\\"+Integer.toString(i), null))!=null){
@@ -103,7 +108,8 @@ public class CommandManager {
         try {
             prefs.flush();
         } catch (BackingStoreException ex) {
-            Logger.getLogger(CommandManager.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(CommandManager.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println(ex.toString());
         }
     }
     

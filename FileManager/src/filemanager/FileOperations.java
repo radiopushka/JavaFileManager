@@ -14,8 +14,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Enumeration;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+//import java.util.logging.Level;
+//import java.util.logging.Logger;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -61,7 +61,8 @@ public class FileOperations {
             in.close();
             out.close();
         } catch (Exception ex) {
-            Logger.getLogger(FileOperations.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(FileOperations.class.getName()).log(Level.SEVERE, null, ex);
+              System.out.println(ex.toString());
         }
     }
     private static boolean file_exists_dialogue(File targ,Component parent){

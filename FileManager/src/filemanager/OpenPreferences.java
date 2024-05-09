@@ -10,8 +10,8 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+//import java.util.logging.Level;
+//import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -58,7 +58,8 @@ public class OpenPreferences {
                 psb.start();
                 
             } catch (IOException ex) {
-                Logger.getLogger(mainView.class.getName()).log(Level.SEVERE, null, ex);
+                //Logger.getLogger(mainView.class.getName()).log(Level.SEVERE, null, ex);
+                   System.out.println(ex.toString());
             }
     }
     public static void LaunchDialogue(File in,Component parent,String customsuffix){
@@ -76,7 +77,7 @@ public class OpenPreferences {
         jshow.setLayout(new GridLayout(1,2));
         JPanel jbtn=new JPanel();
         jbtn.setLayout(new GridLayout(5,1));
-        JList jl=new JList();
+        JList<String> jl=new JList<String>();
         jl.setListData(commands);
         jshow.add(jl);
         jl.setSelectedIndex(0);
@@ -94,7 +95,7 @@ public class OpenPreferences {
         jbtn.add(sup);
         jbtn.add(edit);
         edit.addActionListener((ActionEvent e)->{
-             String command=(String)jl.getSelectedValue();
+             String command=jl.getSelectedValue();
              if(command!=null){
                  String prompt=JOptionPane.showInputDialog(parent,"edit",command);
                  if(prompt!=null){
@@ -119,7 +120,7 @@ public class OpenPreferences {
             }
         });
         launch.addActionListener((ActionEvent e) -> {
-            String command=(String)jl.getSelectedValue();
+            String command=jl.getSelectedValue();
             SwingUtilities.getWindowAncestor(launch).dispose();
             if(command!=null){
                 if(in==null)
@@ -130,7 +131,7 @@ public class OpenPreferences {
             
         });
         remove.addActionListener((ActionEvent e) -> {
-            String command=(String)jl.getSelectedValue();
+            String command=jl.getSelectedValue();
             if(command!=null){
                commands.remove(command);
                cmm.clearVector(suffix);
@@ -139,7 +140,7 @@ public class OpenPreferences {
             }
         });
         sup.addActionListener((ActionEvent e)->{
-            String command=(String)jl.getSelectedValue();
+            String command=jl.getSelectedValue();
             if(command!=null&&commands.size()>1){
                commands.remove(command);
                commands.add(command);
